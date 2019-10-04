@@ -1,0 +1,12 @@
+".\exp_2_fall2019.obj",
+".\LCD_hardware_functions.obj",
+".\LCD_routines.obj",
+".\LED_Outputs.obj",
+".\Long_Serial_In.obj",
+".\print_bytes.obj",
+".\Timer0_hardware_delay_1ms.obj",
+".\UART.obj",
+".\SPI.obj",
+".\SD_card.obj",
+".\outputs.obj" 
+TO "exp2" 

@@ -1,0 +1,84 @@
+C51 COMPILER V6.02  OUTPUTS                                                                10/03/2019 21:35:36 PAGE 1   
+
+
+C51 COMPILER V6.02, COMPILATION OF MODULE OUTPUTS
+OBJECT MODULE PLACED IN .\outputs.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\source\outputs.c DEBUG OBJECTEXTEND PRINT(.\outputs.lst) OBJECT(.\output
+                    -s.obj) 
+
+stmt level    source
+
+   1          #include "outputs.h"
+   2          
+   3          void write_port_bit(uint8_t port_num, uint8_t bit_num, uint8_t bit_val)
+   4          {
+   5   1      	if(bit_val)
+   6   1      	{
+   7   2      		switch(port_num)
+   8   2      			{
+   9   3      				case PORT0:
+  10   3      					P0|=(1<<bit_num);
+  11   3      					break;
+  12   3      				case PORT1:
+  13   3      					P1|=(1<<bit_num);
+  14   3      					break;
+  15   3      				case PORT2:
+  16   3      					P2|=(1<<bit_num);
+  17   3      			   		break;
+  18   3      				case PORT3:
+  19   3      					P3|=(1<<bit_num);
+  20   3      			}
+  21   2      	}
+  22   1      else
+  23   1      	{
+  24   2      		switch(port_num)
+  25   2      			{
+  26   3      				case PORT0:
+  27   3      					P0&=~(1<<bit_num);
+  28   3      					break;
+  29   3      				case PORT1:
+  30   3      					P1&=~(1<<bit_num);
+  31   3      					break;
+  32   3      				case PORT2:
+  33   3      					P2&=~(1<<bit_num);
+  34   3      			   		break;
+  35   3      				case PORT3:
+  36   3      					P3&=~(1<<bit_num);
+  37   3      			}
+  38   2      	}
+  39   1      
+  40   1      }
+  41          
+  42          void write_port_value(uint8_t port_num, uint8_t port_val)
+  43          {
+  44   1      	switch(port_num)
+  45   1      		{
+  46   2      			case PORT0:
+  47   2      				P0 = port_val;
+  48   2      				break;
+  49   2      			case PORT1:
+  50   2      				P1 = port_val;
+  51   2      				break;
+  52   2      			case PORT2:
+  53   2      				P2 = port_val;
+  54   2      			   	break;
+C51 COMPILER V6.02  OUTPUTS                                                                10/03/2019 21:35:36 PAGE 2   
+
+  55   2      			case PORT3:
+  56   2      				P3 = port_val;
+  57   2      		}
+  58   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    178    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
