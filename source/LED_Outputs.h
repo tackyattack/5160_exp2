@@ -3,13 +3,8 @@
 
 #include "Main.H"
 
-
 // LED Output Functions
-
-
-void LEDS_ON(uint8_t LED_bits);
-void LEDS_OFF(uint8_t LED_bits);
-
-
+void LED_ON(uint8_t pin);
+void LED_OFF(uint8_t pin);
 
 #endif

@@ -71,6 +71,7 @@ sbit E = P3^7;
 #define RS_bit 1<<6
 #define E_bit 1<<7
 
+#define LEDS_PORT      PORT2
 #define GREEN_LED_PIN  (7)
 #define AMBER_LED_PIN  (6)
 #define YELLOW_LED_PIN (5)

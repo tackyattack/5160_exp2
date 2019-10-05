@@ -14,7 +14,7 @@
 uint8_t SPI_master_init(uint32_t clock_rate)
 {
   uint8_t divider,power2_val,power2_cnt;
-  divider = (OSC_FREQ*6)/(OSC_PER_INST*clock_rate);
+  divider = (uint8_t)(((OSC_FREQ/OSC_PER_INST)*6)/clock_rate);
   power2_val = 2; // start off checking 2
 
   // run through each possible divider and check if it's still

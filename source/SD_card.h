@@ -14,7 +14,8 @@
 #define SD_CARD_INIT_ERROR_UNUSABLE_CARD     (7)
 #define SD_CARD_INIT_POWERUP_ERROR           (8)
 #define SD_CARD_INIT_OK                      (9)
+#define SD_CARD_RECEIVE_COMMAND_OK           (10)
 // ------ Public function prototypes -------------------------------
-
+uint8_t SD_card_init(void);
 
 #endif
