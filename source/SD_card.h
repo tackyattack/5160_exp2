@@ -15,7 +15,10 @@
 #define SD_CARD_INIT_POWERUP_ERROR           (8)
 #define SD_CARD_INIT_OK                      (9)
 #define SD_CARD_RECEIVE_COMMAND_OK           (10)
+#define SD_CARD_READ_BLOCK_OK                (11)
+#define SD_CARD_READ_BLOCK_ERROR             (12)
 // ------ Public function prototypes -------------------------------
 uint8_t SD_card_init(void);
+uint8_t read_block(uint32_t block_address, uint16_t number_of_bytes, uint8_t *array);
 
 #endif

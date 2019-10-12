@@ -39,20 +39,20 @@ else
 
 }
 
-void write_port_value(uint8_t port_num, uint8_t port_val)
-{
-	switch(port_num)
-		{
-			case PORT0:
-				P0 = port_val;
-				break;
-			case PORT1:
-				P1 = port_val;
-				break;
-			case PORT2:
-				P2 = port_val;
-			   	break;
-			case PORT3:
-				P3 = port_val;
-		}
-}
+// void write_port_value(uint8_t port_num, uint8_t port_val)
+// {
+// 	switch(port_num)
+// 		{
+// 			case PORT0:
+// 				P0 = port_val;
+// 				break;
+// 			case PORT1:
+// 				P1 = port_val;
+// 				break;
+// 			case PORT2:
+// 				P2 = port_val;
+// 			   	break;
+// 			case PORT3:
+// 				P3 = port_val;
+// 		}
+// }

@@ -12,6 +12,7 @@
 #define ACMD41  (41)
 #define CMD55   (55)
 #define CMD16   (16)
+#define CMD17   (17)
 #define R1_ACTIVE (0x00)
 #define R1_IDLE   (0x01)
 
@@ -67,6 +68,7 @@ uint8_t receive_response(uint8_t number_of_bytes, uint8_t *array_name)
   uint16_t timeout;
   ret_val = SD_CARD_RECEIVE_COMMAND_OK;
   // Get R1 response
+  timeout=0;
   do
   {
     error_flag = SPI_transfer(0xFF, &SPI_value);
@@ -245,4 +247,50 @@ uint8_t SD_card_init(void)
 
   return SD_CARD_INIT_OK;
 
+}
+
+uint8_t read_block(uint32_t block_address, uint16_t number_of_bytes, uint8_t *array)
+{
+  uint8_t ret_val, SPI_value, error_flag;
+  uint16_t timeout, index;
+  ret_val = SD_CARD_RECEIVE_COMMAND_OK;
+
+  send_basic_init_cmd(CMD17, block_address, 1, &SPI_value, BASIC_COMMAND_MORE_CMDS);
+  if (error_flag == BASIC_COMMAND_FAIL || SPI_value != R1_ACTIVE) return SD_CARD_READ_BLOCK_ERROR;
+
+  printf("Waiting for data start token\n");
+  // Get to data start token
+  timeout = 0;
+  do
+  {
+    error_flag = SPI_transfer(0xFF, &SPI_value);
+    timeout++;
+  }while((SPI_value == 0xFF)&&(timeout!=0)&&(error_flag==SPI_TRANSFER_OK));
+  if(timeout == 0) return SD_TIMEOUT_ERROR;
+  if(error_flag != SPI_TRANSFER_OK) return SD_CARD_SPI_ERROR;
+
+  // data token
+  if(SPI_value == 0xFE)
+  {
+    printf("Data start token found\n");
+    for(index = 0; index < number_of_bytes; index++)
+    {
+      error_flag = SPI_transfer(0xFF, &SPI_value);
+      if(error_flag != SPI_TRANSFER_OK) return SD_CARD_READ_BLOCK_ERROR;
+      array[index] = SPI_value;
+    }
+  }
+  else
+  {
+    return SD_CARD_READ_BLOCK_ERROR;
+  }
+
+  // CRC16 and give SD card 8 more clocks
+  SPI_transfer(0xFF, &SPI_value);
+  SPI_transfer(0xFF, &SPI_value);
+  SPI_transfer(0xFF, &SPI_value);
+
+  write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+
+  return SD_CARD_READ_BLOCK_OK;
 }

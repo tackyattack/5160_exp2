@@ -11,6 +11,8 @@
 #include "SD_card.h"
 #include "outputs.h"
 
+xdata uint8_t block_data[512];
+
 main()
 {
    uint8_t error_flag;
@@ -47,17 +49,33 @@ main()
      LCD_Print(0x00, sizeof("SD card success")-1, "SD card success");
      LED_ON(GREEN_LED_PIN);
    }
+
+   // increase SPI speed to 2MHz
+   error_flag = SPI_master_init(2000000);
+   if(error_flag != SPI_INIT_OK) printf("SPI init error\n");
+
    LED_OFF(RED_LED_PIN);
    //**** Super Loop ****//
    while(1)
    {
         //Example of how to use lond serial input function to read a 32-bit input value
-        uint32_t input_value;
-        printf("Input a value: ");
-        input_value = long_serial_input();
-		//Notice the 'l' modifier on %u which indicates a long (32-bit value)
-		//If the value to print is a char (8-bit value), then use a 'b' modifier (%bu).
-        printf("Value Entered = %lu\n\r",input_value);
+        uint32_t block_address;
+        printf("Input a block number to read: ");
+        block_address = long_serial_input();
+		    //Notice the 'l' modifier on %u which indicates a long (32-bit value)
+		    //If the value to print is a char (8-bit value), then use a 'b' modifier (%bu).
+        printf("Block requested = %lu\n\r", block_address);
+        LED_ON(AMBER_LED_PIN);
+        error_flag = read_block(block_address, 512, block_data);
+        LED_OFF(AMBER_LED_PIN);
+        if(error_flag == SD_CARD_READ_BLOCK_OK)
+        {
+          print_memory(block_data, 512);
+        }
+        else
+        {
+          printf("error reading SD card block\n");
+        }
 
    }
 }

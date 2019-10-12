@@ -1,4 +1,4 @@
-C51 COMPILER V6.02  SD_CARD                                                                10/05/2019 02:53:07 PAGE 1   
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 1   
 
 
 C51 COMPILER V6.02, COMPILATION OF MODULE SD_CARD
@@ -22,257 +22,307 @@ stmt level    source
   12          #define ACMD41  (41)
   13          #define CMD55   (55)
   14          #define CMD16   (16)
-  15          #define R1_ACTIVE (0x00)
-  16          #define R1_IDLE   (0x01)
-  17          
-  18          #define CARD_VERSION_1 (1)
-  19          #define CARD_VERSION_2 (2)
-  20          
-  21          #define BASIC_COMMAND_OK (0)
-  22          #define BASIC_COMMAND_FAIL (1)
-  23          #define BASIC_COMMAND_NO_MORE_CMDS (0)
-  24          #define BASIC_COMMAND_MORE_CMDS (1)
-  25          
-  26          uint8_t send_command(uint8_t command, uint32_t argument)
-  27          {
-  28   1        uint8_t error_flag, received_value, byte_cnt;
-  29   1        uint8_t send_bytes[6];
-  30   1        if(command > 63) return SD_SEND_COMMAND_INVALID;
-  31   1      
-  32   1        // append start and transmission bits to first byte
-  33   1        send_bytes[0] = 0x40 | command;
-  34   1        send_bytes[1] = (argument>>24);
-  35   1        send_bytes[2] = (argument&0x00ffffff)>>16;
-  36   1        send_bytes[3] = (argument&0x0000ffff)>>8;
-  37   1        send_bytes[4] = (argument&0x000000ff);
-  38   1        // CRC7 and end bit
-  39   1        if(command == 0)
-  40   1        {
-  41   2          send_bytes[5] = 0x95;
-  42   2        }
-  43   1        else if(command == 8)
-  44   1        {
-  45   2          send_bytes[5] = 0x87;
-  46   2        }
-  47   1        else
-  48   1        {
-  49   2          send_bytes[5] = 0x01; // just end bit for other commands
-  50   2        }
-  51   1      
-  52   1        for(byte_cnt = 0; byte_cnt < 6; byte_cnt++)
-  53   1        {
-  54   2          error_flag = SPI_transfer(send_bytes[byte_cnt], &received_value);
-C51 COMPILER V6.02  SD_CARD                                                                10/05/2019 02:53:07 PAGE 2   
+  15          #define CMD17   (17)
+  16          #define R1_ACTIVE (0x00)
+  17          #define R1_IDLE   (0x01)
+  18          
+  19          #define CARD_VERSION_1 (1)
+  20          #define CARD_VERSION_2 (2)
+  21          
+  22          #define BASIC_COMMAND_OK (0)
+  23          #define BASIC_COMMAND_FAIL (1)
+  24          #define BASIC_COMMAND_NO_MORE_CMDS (0)
+  25          #define BASIC_COMMAND_MORE_CMDS (1)
+  26          
+  27          uint8_t send_command(uint8_t command, uint32_t argument)
+  28          {
+  29   1        uint8_t error_flag, received_value, byte_cnt;
+  30   1        uint8_t send_bytes[6];
+  31   1        if(command > 63) return SD_SEND_COMMAND_INVALID;
+  32   1      
+  33   1        // append start and transmission bits to first byte
+  34   1        send_bytes[0] = 0x40 | command;
+  35   1        send_bytes[1] = (argument>>24);
+  36   1        send_bytes[2] = (argument&0x00ffffff)>>16;
+  37   1        send_bytes[3] = (argument&0x0000ffff)>>8;
+  38   1        send_bytes[4] = (argument&0x000000ff);
+  39   1        // CRC7 and end bit
+  40   1        if(command == 0)
+  41   1        {
+  42   2          send_bytes[5] = 0x95;
+  43   2        }
+  44   1        else if(command == 8)
+  45   1        {
+  46   2          send_bytes[5] = 0x87;
+  47   2        }
+  48   1        else
+  49   1        {
+  50   2          send_bytes[5] = 0x01; // just end bit for other commands
+  51   2        }
+  52   1      
+  53   1        for(byte_cnt = 0; byte_cnt < 6; byte_cnt++)
+  54   1        {
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 2   
 
-  55   2          if(error_flag != SPI_TRANSFER_OK)
-  56   2          {
-  57   3            return SD_CARD_SPI_ERROR;
-  58   3          }
-  59   2        }
-  60   1      
-  61   1        return SD_SEND_COMMAND_OK;
-  62   1      }
-  63          
-  64          uint8_t receive_response(uint8_t number_of_bytes, uint8_t *array_name)
-  65          {
-  66   1        uint8_t ret_val, SPI_value, error_flag, index;
-  67   1        uint16_t timeout;
-  68   1        ret_val = SD_CARD_RECEIVE_COMMAND_OK;
-  69   1        // Get R1 response
-  70   1        do
-  71   1        {
-  72   2          error_flag = SPI_transfer(0xFF, &SPI_value);
-  73   2          timeout++;
-  74   2        }while((SPI_value == 0xFF)&&(timeout!=0)&&(error_flag==SPI_TRANSFER_OK));
-  75   1      
-  76   1        if(error_flag != SPI_TRANSFER_OK)
-  77   1        {
-  78   2          ret_val = SD_CARD_SPI_ERROR;
-  79   2        }
-  80   1        else if(timeout == 0)
-  81   1        {
-  82   2          ret_val = SD_TIMEOUT_ERROR;
-  83   2        }
-  84   1        else if((SPI_value&0xFE)!=0x00)
-  85   1        {
-  86   2          array_name[0] = SPI_value;
-  87   2          ret_val = SD_COMMUNICATION_ERROR;
-  88   2        }
-  89   1        else
-  90   1        {
-  91   2          // get the rest of the bytes
-  92   2          array_name[0] = SPI_value;
-  93   2          if(number_of_bytes > 1)
-  94   2          {
-  95   3            for(index=1; index<number_of_bytes; index++)
-  96   3            {
-  97   4              error_flag = SPI_transfer(0xFF, &SPI_value);
-  98   4              array_name[index] = SPI_value;
-  99   4            }
- 100   3          }
- 101   2        }
- 102   1      
- 103   1        error_flag = SPI_transfer(0xFF, &SPI_value); // send one more byte to give SD card 8 clocks
- 104   1        return ret_val;
- 105   1      }
- 106          
- 107          
+  55   2          error_flag = SPI_transfer(send_bytes[byte_cnt], &received_value);
+  56   2          if(error_flag != SPI_TRANSFER_OK)
+  57   2          {
+  58   3            return SD_CARD_SPI_ERROR;
+  59   3          }
+  60   2        }
+  61   1      
+  62   1        return SD_SEND_COMMAND_OK;
+  63   1      }
+  64          
+  65          uint8_t receive_response(uint8_t number_of_bytes, uint8_t *array_name)
+  66          {
+  67   1        uint8_t ret_val, SPI_value, error_flag, index;
+  68   1        uint16_t timeout;
+  69   1        ret_val = SD_CARD_RECEIVE_COMMAND_OK;
+  70   1        // Get R1 response
+  71   1        timeout=0;
+  72   1        do
+  73   1        {
+  74   2          error_flag = SPI_transfer(0xFF, &SPI_value);
+  75   2          timeout++;
+  76   2        }while((SPI_value == 0xFF)&&(timeout!=0)&&(error_flag==SPI_TRANSFER_OK));
+  77   1      
+  78   1        if(error_flag != SPI_TRANSFER_OK)
+  79   1        {
+  80   2          ret_val = SD_CARD_SPI_ERROR;
+  81   2        }
+  82   1        else if(timeout == 0)
+  83   1        {
+  84   2          ret_val = SD_TIMEOUT_ERROR;
+  85   2        }
+  86   1        else if((SPI_value&0xFE)!=0x00)
+  87   1        {
+  88   2          array_name[0] = SPI_value;
+  89   2          ret_val = SD_COMMUNICATION_ERROR;
+  90   2        }
+  91   1        else
+  92   1        {
+  93   2          // get the rest of the bytes
+  94   2          array_name[0] = SPI_value;
+  95   2          if(number_of_bytes > 1)
+  96   2          {
+  97   3            for(index=1; index<number_of_bytes; index++)
+  98   3            {
+  99   4              error_flag = SPI_transfer(0xFF, &SPI_value);
+ 100   4              array_name[index] = SPI_value;
+ 101   4            }
+ 102   3          }
+ 103   2        }
+ 104   1      
+ 105   1        error_flag = SPI_transfer(0xFF, &SPI_value); // send one more byte to give SD card 8 clocks
+ 106   1        return ret_val;
+ 107   1      }
  108          
- 109          uint8_t send_basic_init_cmd(uint8_t cmd, uint32_t arg, uint8_t response_size, uint8_t *values, uint8_t mor
+ 109          
+ 110          
+ 111          uint8_t send_basic_init_cmd(uint8_t cmd, uint32_t arg, uint8_t response_size, uint8_t *values, uint8_t mor
              -e_cmds)
- 110          {
- 111   1        uint8_t error_flag, i;
- 112   1        printf("Sending CMD%bu  arg:< ", cmd);
- 113   1        for(i=0;i<4;i++)printf("%2.2bX ",(arg&(0xff<<i*8))>>i*8);
- 114   1        printf(">\n");
- 115   1      
-C51 COMPILER V6.02  SD_CARD                                                                10/05/2019 02:53:07 PAGE 3   
+ 112          {
+ 113   1        uint8_t error_flag, i;
+ 114   1        printf("Sending CMD%bu  arg:< ", cmd);
+ 115   1        for(i=0;i<4;i++)printf("%2.2bX ",(arg&(0xff<<i*8))>>i*8);
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 3   
 
- 116   1        write_port_bit(SD_PORT, SD_NCS_PIN, CLEAR_BIT);
+ 116   1        printf(">\n");
  117   1      
- 118   1        error_flag = send_command(cmd, arg);
- 119   1        if(error_flag != SD_SEND_COMMAND_OK)
- 120   1        {
- 121   2          write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
- 122   2          printf("Error: command: code: %2.2bX\n", error_flag);
- 123   2          return BASIC_COMMAND_FAIL;
- 124   2        }
- 125   1        error_flag = receive_response(response_size, values);
- 126   1        // don't set /CS if there's going to be more commands
- 127   1        if(more_cmds == BASIC_COMMAND_NO_MORE_CMDS) write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
- 128   1        if(error_flag != SD_CARD_RECEIVE_COMMAND_OK)
- 129   1        {
- 130   2          printf("Error: response: code: %2.2bX\n", error_flag);
- 131   2          return BASIC_COMMAND_FAIL;
- 132   2        }
- 133   1      
- 134   1        printf("   response:< ");
- 135   1        for(i=0;i<response_size;i++)printf("%2.2bX ", values[i]);
- 136   1        printf(">\n");
- 137   1      
- 138   1        return BASIC_COMMAND_OK;
- 139   1      }
- 140          
- 141          uint8_t SD_card_init(void)
- 142          {
- 143   1        uint8_t i, error_flag, SPI_values[8], card_version;
- 144   1        uint16_t timeout;
- 145   1        printf("SD Card init...\n\r");
- 146   1      
- 147   1        write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
- 148   1        // send 80 clocks
- 149   1        for(i = 0; i < 10; i++)
- 150   1        {
- 151   2          error_flag = SPI_transfer(0xFF, &SPI_values[0]);
- 152   2        }
- 153   1      
- 154   1        // ---------------- Send CMD0 ----------------
- 155   1        error_flag = send_basic_init_cmd(CMD0, 0x00, 1, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
- 156   1        if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
- 157   1      
- 158   1        // ---------------- Send CMD8 ----------------
- 159   1        error_flag = send_basic_init_cmd(CMD8, 0x000001AA, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
- 160   1        if (error_flag == BASIC_COMMAND_FAIL) return SD_CARD_INIT_ERROR;
- 161   1      
- 162   1        if(SPI_values[0] == 0x01)
- 163   1        {
- 164   2          card_version = CARD_VERSION_2;
- 165   2          // voltage check
- 166   2          // 0x01: 2.7V-3.6V
- 167   2          if(SPI_values[3] != 0x01)
- 168   2          {
- 169   3            printf("Error: SD card voltage is not in range\n");
- 170   3            return SD_CARD_INIT_ERROR_UNUSABLE_CARD;
- 171   3          }
- 172   2        }
- 173   1        else if(SPI_values[0] == 0x05)
- 174   1        {
- 175   2          card_version = CARD_VERSION_1;
- 176   2        }
- 177   1        else
-C51 COMPILER V6.02  SD_CARD                                                                10/05/2019 02:53:07 PAGE 4   
+ 118   1        write_port_bit(SD_PORT, SD_NCS_PIN, CLEAR_BIT);
+ 119   1      
+ 120   1        error_flag = send_command(cmd, arg);
+ 121   1        if(error_flag != SD_SEND_COMMAND_OK)
+ 122   1        {
+ 123   2          write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+ 124   2          printf("Error: command: code: %2.2bX\n", error_flag);
+ 125   2          return BASIC_COMMAND_FAIL;
+ 126   2        }
+ 127   1        error_flag = receive_response(response_size, values);
+ 128   1        // don't set /CS if there's going to be more commands
+ 129   1        if(more_cmds == BASIC_COMMAND_NO_MORE_CMDS) write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+ 130   1        if(error_flag != SD_CARD_RECEIVE_COMMAND_OK)
+ 131   1        {
+ 132   2          printf("Error: response: code: %2.2bX\n", error_flag);
+ 133   2          return BASIC_COMMAND_FAIL;
+ 134   2        }
+ 135   1      
+ 136   1        printf("   response:< ");
+ 137   1        for(i=0;i<response_size;i++)printf("%2.2bX ", values[i]);
+ 138   1        printf(">\n");
+ 139   1      
+ 140   1        return BASIC_COMMAND_OK;
+ 141   1      }
+ 142          
+ 143          uint8_t SD_card_init(void)
+ 144          {
+ 145   1        uint8_t i, error_flag, SPI_values[8], card_version;
+ 146   1        uint16_t timeout;
+ 147   1        printf("SD Card init...\n\r");
+ 148   1      
+ 149   1        write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+ 150   1        // send 80 clocks
+ 151   1        for(i = 0; i < 10; i++)
+ 152   1        {
+ 153   2          error_flag = SPI_transfer(0xFF, &SPI_values[0]);
+ 154   2        }
+ 155   1      
+ 156   1        // ---------------- Send CMD0 ----------------
+ 157   1        error_flag = send_basic_init_cmd(CMD0, 0x00, 1, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
+ 158   1        if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
+ 159   1      
+ 160   1        // ---------------- Send CMD8 ----------------
+ 161   1        error_flag = send_basic_init_cmd(CMD8, 0x000001AA, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
+ 162   1        if (error_flag == BASIC_COMMAND_FAIL) return SD_CARD_INIT_ERROR;
+ 163   1      
+ 164   1        if(SPI_values[0] == 0x01)
+ 165   1        {
+ 166   2          card_version = CARD_VERSION_2;
+ 167   2          // voltage check
+ 168   2          // 0x01: 2.7V-3.6V
+ 169   2          if(SPI_values[3] != 0x01)
+ 170   2          {
+ 171   3            printf("Error: SD card voltage is not in range\n");
+ 172   3            return SD_CARD_INIT_ERROR_UNUSABLE_CARD;
+ 173   3          }
+ 174   2        }
+ 175   1        else if(SPI_values[0] == 0x05)
+ 176   1        {
+ 177   2          card_version = CARD_VERSION_1;
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 4   
 
- 178   1        {
- 179   2          return SD_CARD_INIT_ERROR;
- 180   2        }
- 181   1        printf("SD card version:%bu \n", card_version);
- 182   1      
- 183   1        // ---------------- Send CMD58 ----------------
- 184   1        error_flag = send_basic_init_cmd(CMD58, 0x000001AA, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
- 185   1        if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
- 186   1      
- 187   1        // voltage check
- 188   1        if((SPI_values[2]&0xFC) != 0xFC)
- 189   1        {
- 190   2          printf("Error: SD card voltage is not in range\n");
- 191   2          return SD_CARD_INIT_ERROR_UNUSABLE_CARD;
- 192   2        }
- 193   1      
- 194   1        // ---------------- Send ACMD41 ----------------
- 195   1        timeout=0;
- 196   1        do
- 197   1        {
- 198   2          error_flag = send_basic_init_cmd(CMD55, 0x00, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
- 199   2          if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
- 200   2      
- 201   2      
- 202   2          if(card_version == CARD_VERSION_1)
- 203   2          {
- 204   3            error_flag = send_basic_init_cmd(ACMD41, 0x00, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
- 205   3          }
- 206   2          else
- 207   2          {
- 208   3            error_flag = send_basic_init_cmd(ACMD41, 0x40000000, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
- 209   3          }
- 210   2          if(error_flag == BASIC_COMMAND_FAIL) return SD_CARD_INIT_ERROR;
- 211   2      
- 212   2          timeout++;
- 213   2        }while((timeout!=0) && (SPI_values[0] != R1_ACTIVE));
- 214   1        write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
- 215   1        if(timeout == 0)
- 216   1        {
- 217   2          printf("Error: SD card timeout\n");
- 218   2          return SD_CARD_INIT_ERROR;
- 219   2        }
- 220   1      
- 221   1        // ---------------- Send CMD58 ----------------
- 222   1        if(card_version == CARD_VERSION_2)
- 223   1        {
- 224   2          error_flag = send_basic_init_cmd(CMD58, 0x00, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
- 225   2          if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_ACTIVE) return SD_CARD_INIT_ERROR;
- 226   2      
- 227   2          // check for power up
- 228   2          if((SPI_values[1]&0x80) != 0x80)
- 229   2          {
- 230   3            printf("Error: SD card did not power up\n");
- 231   3            return SD_CARD_INIT_POWERUP_ERROR;
- 232   3          }
- 233   2          // check for standard capacity card
- 234   2          if((SPI_values[1]&0x40) != 0x40)
- 235   2          {
- 236   3            printf("SD card capacity: standard\n");
- 237   3            error_flag = send_basic_init_cmd(CMD16, 512, 1, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
- 238   3            if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_ACTIVE) return SD_CARD_INIT_ERROR;
- 239   3          }
-C51 COMPILER V6.02  SD_CARD                                                                10/05/2019 02:53:07 PAGE 5   
+ 178   2        }
+ 179   1        else
+ 180   1        {
+ 181   2          return SD_CARD_INIT_ERROR;
+ 182   2        }
+ 183   1        printf("SD card version:%bu \n", card_version);
+ 184   1      
+ 185   1        // ---------------- Send CMD58 ----------------
+ 186   1        error_flag = send_basic_init_cmd(CMD58, 0x000001AA, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
+ 187   1        if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
+ 188   1      
+ 189   1        // voltage check
+ 190   1        if((SPI_values[2]&0xFC) != 0xFC)
+ 191   1        {
+ 192   2          printf("Error: SD card voltage is not in range\n");
+ 193   2          return SD_CARD_INIT_ERROR_UNUSABLE_CARD;
+ 194   2        }
+ 195   1      
+ 196   1        // ---------------- Send ACMD41 ----------------
+ 197   1        timeout=0;
+ 198   1        do
+ 199   1        {
+ 200   2          error_flag = send_basic_init_cmd(CMD55, 0x00, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
+ 201   2          if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_IDLE) return SD_CARD_INIT_ERROR;
+ 202   2      
+ 203   2      
+ 204   2          if(card_version == CARD_VERSION_1)
+ 205   2          {
+ 206   3            error_flag = send_basic_init_cmd(ACMD41, 0x00, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
+ 207   3          }
+ 208   2          else
+ 209   2          {
+ 210   3            error_flag = send_basic_init_cmd(ACMD41, 0x40000000, 1, SPI_values, BASIC_COMMAND_MORE_CMDS);
+ 211   3          }
+ 212   2          if(error_flag == BASIC_COMMAND_FAIL) return SD_CARD_INIT_ERROR;
+ 213   2      
+ 214   2          timeout++;
+ 215   2        }while((timeout!=0) && (SPI_values[0] != R1_ACTIVE));
+ 216   1        write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+ 217   1        if(timeout == 0)
+ 218   1        {
+ 219   2          printf("Error: SD card timeout\n");
+ 220   2          return SD_CARD_INIT_ERROR;
+ 221   2        }
+ 222   1      
+ 223   1        // ---------------- Send CMD58 ----------------
+ 224   1        if(card_version == CARD_VERSION_2)
+ 225   1        {
+ 226   2          error_flag = send_basic_init_cmd(CMD58, 0x00, 5, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
+ 227   2          if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_ACTIVE) return SD_CARD_INIT_ERROR;
+ 228   2      
+ 229   2          // check for power up
+ 230   2          if((SPI_values[1]&0x80) != 0x80)
+ 231   2          {
+ 232   3            printf("Error: SD card did not power up\n");
+ 233   3            return SD_CARD_INIT_POWERUP_ERROR;
+ 234   3          }
+ 235   2          // check for standard capacity card
+ 236   2          if((SPI_values[1]&0x40) != 0x40)
+ 237   2          {
+ 238   3            printf("SD card capacity: standard\n");
+ 239   3            error_flag = send_basic_init_cmd(CMD16, 512, 1, SPI_values, BASIC_COMMAND_NO_MORE_CMDS);
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 5   
 
- 240   2          else
- 241   2          {
- 242   3            printf("SD card capacity: high\n");
- 243   3          }
- 244   2        }
- 245   1      
- 246   1        return SD_CARD_INIT_OK;
+ 240   3            if (error_flag == BASIC_COMMAND_FAIL || SPI_values[0] != R1_ACTIVE) return SD_CARD_INIT_ERROR;
+ 241   3          }
+ 242   2          else
+ 243   2          {
+ 244   3            printf("SD card capacity: high\n");
+ 245   3          }
+ 246   2        }
  247   1      
- 248   1      }
+ 248   1        return SD_CARD_INIT_OK;
+ 249   1      
+ 250   1      }
+ 251          
+ 252          uint8_t read_block(uint32_t block_address, uint16_t number_of_bytes, uint8_t *array)
+ 253          {
+ 254   1        uint8_t ret_val, SPI_value, error_flag;
+ 255   1        uint16_t timeout, index;
+ 256   1        ret_val = SD_CARD_RECEIVE_COMMAND_OK;
+ 257   1      
+ 258   1        send_basic_init_cmd(CMD17, block_address, 1, &SPI_value, BASIC_COMMAND_MORE_CMDS);
+ 259   1        if (error_flag == BASIC_COMMAND_FAIL || SPI_value != R1_ACTIVE) return SD_CARD_READ_BLOCK_ERROR;
+ 260   1      
+ 261   1        printf("Waiting for data start token\n");
+ 262   1        // Get to data start token
+ 263   1        timeout = 0;
+ 264   1        do
+ 265   1        {
+ 266   2          error_flag = SPI_transfer(0xFF, &SPI_value);
+ 267   2          timeout++;
+ 268   2        }while((SPI_value == 0xFF)&&(timeout!=0)&&(error_flag==SPI_TRANSFER_OK));
+ 269   1        if(timeout == 0) return SD_TIMEOUT_ERROR;
+ 270   1        if(error_flag != SPI_TRANSFER_OK) return SD_CARD_SPI_ERROR;
+ 271   1      
+ 272   1        // data token
+ 273   1        if(SPI_value == 0xFE)
+ 274   1        {
+ 275   2          printf("Data start token found\n");
+ 276   2          for(index = 0; index < number_of_bytes; index++)
+ 277   2          {
+ 278   3            error_flag = SPI_transfer(0xFF, &SPI_value);
+ 279   3            if(error_flag != SPI_TRANSFER_OK) return SD_CARD_READ_BLOCK_ERROR;
+ 280   3            array[index] = SPI_value;
+ 281   3          }
+ 282   2        }
+ 283   1        else
+ 284   1        {
+ 285   2          return SD_CARD_READ_BLOCK_ERROR;
+ 286   2        }
+ 287   1      
+ 288   1        // CRC16 and give SD card 8 more clocks
+ 289   1        SPI_transfer(0xFF, &SPI_value);
+ 290   1        SPI_transfer(0xFF, &SPI_value);
+ 291   1        SPI_transfer(0xFF, &SPI_value);
+ 292   1      
+ 293   1        write_port_bit(SD_PORT, SD_NCS_PIN, SET_BIT);
+ 294   1      
+ 295   1        return SD_CARD_READ_BLOCK_OK;
+ 296   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1097    ----
-   CONSTANT SIZE    =    299    ----
+   CODE SIZE        =   1344    ----
+   CONSTANT SIZE    =    353    ----
+C51 COMPILER V6.02  SD_CARD                                                                10/11/2019 21:49:13 PAGE 6   
+
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----      48
+   DATA SIZE        =   ----      64
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

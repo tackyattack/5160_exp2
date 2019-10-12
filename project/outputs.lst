@@ -1,4 +1,4 @@
-C51 COMPILER V6.02  OUTPUTS                                                                10/05/2019 02:53:07 PAGE 1   
+C51 COMPILER V6.02  OUTPUTS                                                                10/11/2019 21:49:13 PAGE 1   
 
 
 C51 COMPILER V6.02, COMPILATION OF MODULE OUTPUTS
@@ -49,29 +49,29 @@ stmt level    source
   39   1      
   40   1      }
   41          
-  42          void write_port_value(uint8_t port_num, uint8_t port_val)
-  43          {
-  44   1      	switch(port_num)
-  45   1      		{
-  46   2      			case PORT0:
-  47   2      				P0 = port_val;
-  48   2      				break;
-  49   2      			case PORT1:
-  50   2      				P1 = port_val;
-  51   2      				break;
-  52   2      			case PORT2:
-  53   2      				P2 = port_val;
-  54   2      			   	break;
-C51 COMPILER V6.02  OUTPUTS                                                                10/05/2019 02:53:07 PAGE 2   
+  42          // void write_port_value(uint8_t port_num, uint8_t port_val)
+  43          // {
+  44          // 	switch(port_num)
+  45          // 		{
+  46          // 			case PORT0:
+  47          // 				P0 = port_val;
+  48          // 				break;
+  49          // 			case PORT1:
+  50          // 				P1 = port_val;
+  51          // 				break;
+  52          // 			case PORT2:
+  53          // 				P2 = port_val;
+  54          // 			   	break;
+C51 COMPILER V6.02  OUTPUTS                                                                10/11/2019 21:49:13 PAGE 2   
 
-  55   2      			case PORT3:
-  56   2      				P3 = port_val;
-  57   2      		}
-  58   1      }
+  55          // 			case PORT3:
+  56          // 				P3 = port_val;
+  57          // 		}
+  58          // }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    178    ----
+   CODE SIZE        =    152    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
